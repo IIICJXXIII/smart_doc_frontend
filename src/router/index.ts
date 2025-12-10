@@ -4,6 +4,8 @@ const DocList = () => import('../views/DocList.vue')
 const StatsDashboard = () => import('../views/StatsDashboard.vue')
 const Login = () => import('../views/Login.vue') // 引入登录页
 const Register = () => import('../views/Register.vue')
+const ChatAssistant = () => import('../views/ChatAssistant.vue')
+const BudgetCenter = () => import('../views/BudgetCenter.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,6 +16,8 @@ const router = createRouter({
     { path: '/upload', name: 'upload', component: SmartUploader },
     { path: '/list', name: 'list', component: DocList },
     { path: '/stats', name: 'stats', component: StatsDashboard },
+    { path: '/chat', name: 'chat', component: ChatAssistant },
+    { path: '/budget', name: 'budget', component: BudgetCenter },
   ],
 })
 

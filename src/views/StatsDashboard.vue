@@ -56,7 +56,10 @@
       <el-card shadow="never" class="chart-card">
         <template #header>
           <div class="chart-header">
-            <span>📈 近期报销趋势</span>
+            <span>📈 支出趋势 & AI 预测</span>
+            <el-tag type="warning" effect="plain" size="small" style="margin-left: 10px">
+              基于线性回归算法
+            </el-tag>
           </div>
         </template>
         <div ref="lineChartRef" class="chart-box"></div>
@@ -76,11 +79,11 @@ const allData = ref<any[]>([])
 const pieChartRef = ref(null)
 const lineChartRef = ref(null)
 
-// --- 计算属性 (数据统计) ---
+// --- 计算属性 (基于全量数据做简单统计) ---
 const totalAmount = computed(() => allData.value.reduce((sum, item) => sum + item.amount, 0))
 const totalCount = computed(() => allData.value.length)
 const currentMonthAmount = computed(() => {
-  const nowStr = new Date().toISOString().slice(0, 7) // "2025-12"
+  const nowStr = new Date().toISOString().slice(0, 7)
   return allData.value
     .filter((item) => item.date.startsWith(nowStr))
     .reduce((sum, item) => sum + item.amount, 0)
@@ -96,18 +99,30 @@ const topCategoryPercent = ref('0')
 // --- 核心逻辑 ---
 onMounted(async () => {
   await fetchData()
-  initCharts()
   window.addEventListener('resize', handleResize)
 })
 
 const fetchData = async () => {
   try {
-    // 复用列表接口，前端计算统计
-    const res = await axios.get('http://localhost:8080/api/doc/list')
-    allData.value = res.data
+    // 1. 获取列表用于计算顶部卡片和饼图 (保持不变)
+    const listRes = await axios.get('http://localhost:8080/api/doc/list')
+    allData.value = listRes.data
     calculateTopCategory()
+
+    // 渲染饼图
+    nextTick(() => {
+      if (pieChartRef.value) renderPieChart()
+    })
+
+    // 2. 获取趋势预测数据 (新增逻辑)
+    const trendRes = await axios.get('http://localhost:8080/api/stats/trend')
+    if (trendRes.data.code === 200) {
+      nextTick(() => {
+        if (lineChartRef.value) renderLineChart(trendRes.data.data) // 传入后端算好的预测数据
+      })
+    }
   } catch (error) {
-    console.error('获取数据失败')
+    console.error('获取数据失败', error)
   }
 }
 
@@ -133,26 +148,17 @@ const calculateTopCategory = () => {
 let pieChart: any = null
 let lineChart: any = null
 
-const initCharts = () => {
-  nextTick(() => {
-    if (pieChartRef.value && lineChartRef.value) {
-      renderPieChart()
-      renderLineChart()
-    }
-  })
-}
-
 const renderPieChart = () => {
   pieChart = echarts.init(pieChartRef.value)
 
-  // 1. 数据聚合
+  // 数据聚合
   const map: Record<string, number> = {}
   allData.value.forEach((item) => {
     map[item.category] = (map[item.category] || 0) + item.amount
   })
   const data = Object.keys(map).map((key) => ({ value: map[key], name: key }))
 
-  // 2. 配置
+  // 配置
   pieChart.setOption({
     tooltip: { trigger: 'item', formatter: '{b}: ¥{c} ({d}%)' },
     legend: { bottom: '0%', left: 'center' },
@@ -172,29 +178,35 @@ const renderPieChart = () => {
   })
 }
 
-const renderLineChart = () => {
+// 核心修改：渲染折线图 (包含预测)
+const renderLineChart = (chartData: any) => {
   lineChart = echarts.init(lineChartRef.value)
 
-  // 1. 按日期聚合
-  const dateMap: Record<string, number> = {}
-  allData.value.forEach((item) => {
-    // 假设 date 格式为 "2025-12-09"
-    dateMap[item.date] = (dateMap[item.date] || 0) + item.amount
-  })
-  // 排序日期
-  const sortedDates = Object.keys(dateMap).sort().slice(-7) // 取最近7天
-  const values = sortedDates.map((date) => dateMap[date])
+  // 构造 X 轴：历史月份 + 下月预测
+  const xData = [...chartData.months, '下月预测']
+
+  // 构造 Y 轴数据
+  // 1. 真实数据系列：最后补一个 null，为了让实线在这里断开
+  const realSeries = [...chartData.amounts, null]
+
+  // 2. 预测数据系列：前面补 null，只画最后一段虚线
+  // 为了让虚线和实线连接起来，预测系列的起点必须是真实数据的最后一个点
+  const lastRealValue = chartData.amounts[chartData.amounts.length - 1] || 0
+  const predictSeries = new Array(chartData.amounts.length - 1).fill(null)
+  predictSeries.push(lastRealValue) // 连接点
+  predictSeries.push(Number(chartData.prediction).toFixed(2)) // 预测点
 
   lineChart.setOption({
     tooltip: { trigger: 'axis' },
     grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-    xAxis: { type: 'category', boundaryGap: false, data: sortedDates },
+    xAxis: { type: 'category', boundaryGap: false, data: xData },
     yAxis: { type: 'value' },
+    legend: { data: ['实际支出', 'AI预测'] },
     series: [
       {
-        name: '报销金额',
+        name: '实际支出',
         type: 'line',
-        stack: 'Total',
+        data: realSeries,
         smooth: true,
         lineStyle: { width: 3, color: '#409EFF' },
         areaStyle: {
@@ -203,7 +215,21 @@ const renderLineChart = () => {
             { offset: 1, color: 'rgba(64,158,255,0.01)' },
           ]),
         },
-        data: values,
+      },
+      {
+        name: 'AI预测',
+        type: 'line',
+        data: predictSeries,
+        smooth: false, // 预测线一般用直线表示线性回归
+        lineStyle: { width: 3, color: '#E6A23C', type: 'dashed' }, // 虚线
+        itemStyle: { color: '#E6A23C' },
+        label: {
+          show: true,
+          position: 'top',
+          formatter: '预测\n¥{c}',
+          fontSize: 12,
+          color: '#E6A23C',
+        },
       },
     ],
   })
@@ -298,6 +324,8 @@ const handleResize = () => {
   font-weight: bold;
   font-size: 16px;
   color: #303133;
+  display: flex;
+  align-items: center;
 }
 .chart-box {
   width: 100%;

@@ -32,6 +32,15 @@
           <el-icon><PieChart /></el-icon>
           <template #title>数据报表 (Stats)</template>
         </el-menu-item>
+
+        <el-menu-item index="/chat">
+          <el-icon><ChatDotRound /></el-icon>
+          <template #title>AI 财务顾问 (Chat)</template>
+        </el-menu-item>
+
+        <el-menu-item index="/budget">
+          <el-icon><Wallet /> </el-icon> <template #title>预算中心 (Budget)</template>
+        </el-menu-item>
       </el-menu>
 
       <div class="collapse-btn" @click="toggleCollapse">
