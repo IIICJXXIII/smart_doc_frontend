@@ -59,7 +59,7 @@ SmartDoc Frontend 是一款智能票据归档助手的前端项目，提供直�
 
 | 环境 | 版本要求 |
 |------|----------|
-| **Node.js** | `^20.19.0 \|\| >=22.12.0` |
+| **Node.js** | `^20.19.0 || >=22.12.0` |
 | **npm** | 7.0+ |
 
 > **注意**：请确保您的 Node.js 版本符合要求，建议使用 [nvm](https://github.com/nvm-sh/nvm) 或 [nvm-windows](https://github.com/coreybutler/nvm-windows) 管理 Node.js 版本。
@@ -196,7 +196,7 @@ VITE_API_BASE_URL=http://localhost:8080
 在项目根目录创建 `.env.production` 文件（生产环境）：
 
 ```env
-VITE_API_BASE_URL=https://api.yourdomian.com
+VITE_API_BASE_URL=https://api.yourdomain.com
 ```
 
 #### 在代码中使用环境变量
