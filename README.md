@@ -1,22 +1,27 @@
 # 🧾 SmartDoc Frontend - 智能票据归档系统前端
 
-基于 **Vue 3 + TypeScript + Vite + Element Plus** 构建的现代化财务票据管理前端应用。
+基于 **Vue 3 + TypeScript + Vite + Element Plus** 构建的现代化企业级财务票据智能管理平台前端应用。
 
-## 后端仓库
+## 🔗 后端仓库
+
 https://github.com/IIICJXXIII/smart_doc_backend
 
 ---
 
 ## ✨ 技术栈
 
-- **核心框架**：Vue 3 (Composition API)
-- **开发语言**：TypeScript
-- **构建工具**：Vite 7.x
-- **UI 组件库**：Element Plus
-- **路由管理**：Vue Router 4
-- **状态管理**：Pinia
-- **图表库**：Apache ECharts
-- **HTTP 请求**：Axios
+| 类别         | 技术选型                     | 说明                       |
+| ------------ | ---------------------------- | -------------------------- |
+| 核心框架     | Vue 3 (Composition API)      | 响应式前端框架             |
+| 开发语言     | TypeScript                   | 类型安全的 JavaScript 超集 |
+| 构建工具     | Vite 7.x                     | 新一代前端构建工具         |
+| UI 组件库    | Element Plus                 | Vue 3 企业级 UI 组件库     |
+| 路由管理     | Vue Router 4                 | 官方路由管理器             |
+| 状态管理     | Pinia                        | 新一代 Vue 状态管理库      |
+| 图表可视化   | Apache ECharts               | 专业的数据可视化图表库     |
+| HTTP 请求    | Axios                        | 基于 Promise 的 HTTP 客户端 |
+| 实时通信     | WebSocket                    | 双向实时通信协议           |
+| UUID 生成    | uuid                         | 唯一标识符生成库           |
 
 ---
 
@@ -24,20 +29,36 @@ https://github.com/IIICJXXIII/smart_doc_backend
 
 ```plaintext
 src/
-├── assets/              # 静态资源 (CSS, 图片等)
-├── components/          # 可复用组件
-├── router/              # 路由配置
-│   └── index.ts         # 路由守卫 & 路由表
-├── stores/              # Pinia 状态管理
-├── views/               # 页面组件
-│   ├── Login.vue        # 登录页
-│   ├── Register.vue     # 注册页
-│   ├── SmartUploader.vue # 智能上传识别页
-│   ├── DocList.vue      # 归档记录列表
-│   └── StatsDashboard.vue # 数据统计看板
-├── App.vue              # 根组件 (侧边栏 + 路由出口)
-├── main.ts              # 应用入口 (Axios 拦截器配置)
-└── env.d.ts             # TypeScript 类型声明
+├── assets/                    # 静态资源 (CSS, 图片等)
+│   ├── base.css               # 基础样式
+│   └── main.css               # 主样式文件
+├── components/                # 可复用组件
+│   ├── HelloWorld.vue         # 示例组件
+│   ├── TheWelcome.vue         # 欢迎组件
+│   ├── WelcomeItem.vue        # 欢迎项组件
+│   └── icons/                 # 图标组件
+├── router/                    # 路由配置
+│   └── index.ts               # 路由守卫 & 路由表定义
+├── stores/                    # Pinia 状态管理
+│   └── counter.ts             # 计数器 Store 示例
+├── views/                     # 页面视图组件 (共 14 个页面)
+│   ├── Login.vue              # 用户登录页
+│   ├── Register.vue           # 用户注册页
+│   ├── SmartUploader.vue      # 智能票据上传识别页
+│   ├── DocList.vue            # 归档记录列表页
+│   ├── StatsDashboard.vue     # 数据统计报表页
+│   ├── ChatAssistant.vue      # AI 财务顾问对话页
+│   ├── BudgetCenter.vue       # 预算控制中心页
+│   ├── FinanceCalendar.vue    # 财务日历页
+│   ├── KnowledgeGraph.vue     # 消费知识图谱页
+│   ├── ConsumerAnalysis.vue   # AI 消费聚类分析页
+│   ├── RecycleBin.vue         # 回收站页
+│   ├── ApprovalCenter.vue     # 审批工作台页 (管理员)
+│   ├── SystemSettings.vue     # 系统设置页
+│   └── UserProfile.vue        # 个人中心页
+├── App.vue                    # 根组件 (侧边栏导航 + 路由出口)
+├── main.ts                    # 应用入口 (Axios 拦截器配置)
+└── env.d.ts                   # TypeScript 类型声明
 ```
 
 ---
@@ -83,60 +104,220 @@ npm run lint
 
 ### API 基础路径
 
-默认后端 API 地址为 `http://localhost:8080`，如需修改请在以下文件中统一调整：
-
-- `src/views/Login.vue`
-- `src/views/Register.vue`
-- `src/views/SmartUploader.vue`
-- `src/views/DocList.vue`
-- `src/views/StatsDashboard.vue`
+默认后端 API 地址为 `http://localhost:8080`，WebSocket 地址为 `ws://localhost:8080/ws/chat/`。
 
 建议抽取为环境变量（`.env` 文件）：
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080
+VITE_WS_BASE_URL=ws://localhost:8080
 ```
 
 ### Axios 拦截器
 
 在 `src/main.ts` 中已配置：
 
-- **请求拦截器**：自动在请求头中附加 `Authorization: token`
-- **响应拦截器**：401 状态码自动跳转登录页
+| 拦截器类型   | 功能说明                                              |
+| ------------ | ----------------------------------------------------- |
+| 请求拦截器   | 自动在请求头 `Authorization` 字段附加用户 Token       |
+| 响应拦截器   | 检测 401 状态码，自动清除 Token 并跳转登录页          |
 
 ---
 
-## 📄 页面功能
+## 📄 页面功能详细说明
 
-| 路由路径    | 页面名称 | 功能说明                                     |
-| ----------- | -------- | -------------------------------------------- |
-| `/login`    | 登录页   | 用户登录认证                                 |
-| `/register` | 注册页   | 新用户注册                                   |
-| `/upload`   | 智能上传 | 拖拽/点击上传票据，AI 自动识别               |
-| `/list`     | 归档列表 | 查看历史归档记录，支持编辑/删除              |
-| `/stats`    | 数据报表 | ECharts 可视化统计（支出趋势图、分类占比等） |
+### 🔐 认证模块
+
+| 路由路径    | 页面名称       | 功能说明                                                     |
+| ----------- | -------------- | ------------------------------------------------------------ |
+| `/login`    | 用户登录页     | 提供账号密码登录表单，支持 Enter 快捷提交，登录成功后存储 Token 和用户信息到 LocalStorage |
+| `/register` | 用户注册页     | 新用户注册表单，包含用户名、昵称、密码、确认密码字段，支持表单验证（必填、密码长度、确认密码一致性检查） |
 
 ---
 
-## 🛡️ 路由守卫
+### 📊 数据统计模块
 
-项目实现了基于 Token 的路由权限控制：
+| 路由路径    | 页面名称         | 功能说明                                                                                                       |
+| ----------- | ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| `/stats`    | 数据报表仪表板   | **核心数据看板**，包含：<br/>• 累计归档金额统计卡片<br/>• 本月支出统计卡片<br/>• 最高频消费分类统计<br/>• 费用类型分布饼图 (ECharts)<br/>• 支出趋势折线图 + **AI 线性回归预测**（预测下月支出） |
 
-- **白名单页面**：`/login`, `/register` 无需 Token 即可访问
-- **受保护页面**：其他页面需登录后才能访问，未登录自动跳转到 `/login`
+---
+
+### 📁 票据管理模块
+
+| 路由路径    | 页面名称         | 功能说明                                                                                                       |
+| ----------- | ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| `/upload`   | 智能票据归档     | **AI 驱动的票据识别**：<br/>• 支持拖拽或点击上传 PDF/图片格式票据<br/>• 左侧实时预览上传文件<br/>• 后端集成百度 OCR + LLM 智能提取票据信息<br/>• 右侧表单自动填充识别结果（商户名称、项目名称、日期、金额、发票号码、智能分类）<br/>• 人工校对后一键归档保存 |
+| `/list`     | 归档记录列表     | **票据全生命周期管理**：<br/>• 支持按商户名称/项目名称关键词搜索<br/>• 支持按消费分类筛选过滤<br/>• 表格展示：日期、项目、商户、分类、金额、发票号<br/>• **AI 异常检测预警**：标记金额异常的票据（红色警告图标）<br/>• 支持查看详情、编辑修改、软删除操作<br/>• 前端分页（支持 10/20/50/100 条每页） |
+| `/recycle`  | 回收站           | **软删除数据管理**：<br/>• 查看所有已删除的归档记录<br/>• 支持**还原**：恢复到归档列表<br/>• 支持**粉碎**：永久删除单条记录<br/>• 支持**一键清空**：清空回收站所有数据（高危操作，需二次确认） |
+
+---
+
+### 🤖 AI 智能分析模块
+
+| 路由路径    | 页面名称           | 功能说明                                                                                                       |
+| ----------- | ------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `/chat`     | AI 财务顾问        | **基于 WebSocket 的实时对话**：<br/>• 集成 DeepSeek-V3 大语言模型<br/>• 支持多会话管理（新建/切换/历史记录）<br/>• 会话持久化存储（后端保存聊天记录）<br/>• 实时显示连接状态（在线/离线）<br/>• 支持财务相关问题咨询 |
+| `/analysis` | AI 消费聚类分析    | **K-Means 聚类算法可视化**：<br/>• 散点图展示消费行为分布（X轴：日期，Y轴：金额）<br/>• 三类消费群体颜色区分<br/>• 显示聚类中心点（质心）<br/>• **DeepSeek-V3 AI 深度解读**：自动生成消费画像分析报告 |
+| `/graph`    | 消费知识图谱       | **力导向布局知识图谱**：<br/>• ECharts Graph 图表实现<br/>• 可视化展示用户、消费分类、商户之间的关联关系<br/>• 节点大小反映消费金额<br/>• 支持拖拽节点重排布局<br/>• 支持缩放和平移操作 |
+
+---
+
+### 💰 财务管理模块
+
+| 路由路径    | 页面名称         | 功能说明                                                                                                       |
+| ----------- | ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| `/budget`   | 预算控制中心     | **分类预算管理**：<br/>• 设置各消费分类的月度预算限额<br/>• 卡片式展示各分类预算使用进度<br/>• 进度条颜色状态：绿色（正常）、黄色（≥80% 预警）、红色（超支）<br/>• 显示已用金额、限额、超支金额<br/>• 支持新增和删除预算设定 |
+| `/calendar` | 财务日历         | **日历视图消费概览**：<br/>• Element Plus 日历组件展示<br/>• 每日格子显示：消费总金额、消费笔数<br/>• **异常预警标记**：红点标识有异常消费的日期<br/>• 点击日期打开抽屉查看当日消费明细列表<br/>• 明细卡片显示商户、金额、分类、项目名称 |
+
+---
+
+### ⚖️ 审批管理模块（管理员专属）
+
+| 路由路径    | 页面名称         | 功能说明                                                                                                       |
+| ----------- | ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| `/approval` | 审批工作台       | **报销审批流程**（仅管理员可见）：<br/>• 卡片式展示待审批的报销申请<br/>• 显示申请人ID、日期、金额、商户、项目、分类<br/>• **风控预警提示**：标记金额异常的申请<br/>• 支持**通过**审批操作<br/>• 支持**驳回**并填写驳回原因<br/>• 待处理数量角标提示 |
+
+---
+
+### ⚙️ 系统管理模块
+
+| 路由路径    | 页面名称         | 功能说明                                                                                                       |
+| ----------- | ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| `/settings` | 系统设置         | **数据安全与审计**：<br/>• **数据备份**：将发票、预算、聊天记录打包为 JSON 文件下载<br/>• **数据恢复**：上传备份文件，合并恢复数据<br/>• **操作审计日志**：表格展示用户操作历史（时间、操作类型、详情） |
+| `/profile`  | 个人中心         | **用户账户管理**（通过顶部用户下拉菜单访问）：<br/>• **基本资料 Tab**：查看用户名、修改昵称、查看角色<br/>• **安全设置 Tab**：修改登录密码（修改后强制重新登录）<br/>• **数据管理 Tab**：导出归档记录为 Excel (.xlsx) 文件 |
+
+---
+
+## 🗺️ 导航菜单结构
+
+应用采用左侧侧边栏 + 右侧内容区的经典布局，菜单项如下：
+
+| 菜单顺序 | 菜单名称               | 路由路径    | 可见条件     |
+| -------- | ---------------------- | ----------- | ------------ |
+| 1        | 📊 数据报表 (Stats)    | `/stats`    | 所有用户     |
+| 2        | 📤 智能归档 (Upload)   | `/upload`   | 所有用户     |
+| 3        | 📋 归档记录 (List)     | `/list`     | 所有用户     |
+| 4        | 🤖 AI 财务顾问 (Chat)  | `/chat`     | 所有用户     |
+| 5        | 💰 预算中心 (Budget)   | `/budget`   | 所有用户     |
+| 6        | 📅 财务日历 (Calendar) | `/calendar` | 所有用户     |
+| 7        | 🕸️ 消费图谱 (Graph)    | `/graph`    | 所有用户     |
+| 8        | 📈 聚类分析 (AI)       | `/analysis` | 所有用户     |
+| 9        | ♻️ 回收站 (Recycle)    | `/recycle`  | 所有用户     |
+| 10       | ⚖️ 审批工作台          | `/approval` | **仅管理员** |
+| 11       | ⚙️ 系统设置 (Settings) | `/settings` | 所有用户     |
+
+顶部 Header 区域：
+- 左侧：面包屑显示当前页面标题
+- 右侧：用户头像 + 昵称，下拉菜单包含"个人中心"和"退出登录"
+
+---
+
+## 🛡️ 路由守卫与权限控制
+
+### Token 认证机制
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                      用户访问页面                        │
+└──────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+              ┌───────────────────────────────┐
+              │  路由路径在白名单中？          │
+              │  (/login, /register)          │
+              └───────────────────────────────┘
+                     │                │
+                   是 │                │ 否
+                     ▼                ▼
+              ┌──────────┐   ┌────────────────────┐
+              │ 直接放行 │   │ LocalStorage 有 Token？ │
+              └──────────┘   └────────────────────┘
+                                   │          │
+                                 是 │          │ 否
+                                   ▼          ▼
+                            ┌──────────┐ ┌───────────────┐
+                            │ 直接放行 │ │ 跳转到登录页  │
+                            └──────────┘ └───────────────┘
+```
+
+### 权限控制
+
+| 权限类型     | 实现方式                                         |
+| ------------ | ------------------------------------------------ |
+| 页面级权限   | 路由守卫拦截未登录用户                           |
+| 菜单级权限   | `v-if` 条件渲染（如审批工作台仅管理员可见）      |
+| 接口级权限   | 后端校验 Token + 用户角色                        |
+
+---
+
+## 🔌 核心技术实现
+
+### 1. Axios 请求/响应拦截器
+
+```typescript
+// 请求拦截器：自动附加 Token
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = token
+  }
+  return config
+})
+
+// 响应拦截器：处理 401 未授权
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
+```
+
+### 2. WebSocket 实时通信（AI 对话）
+
+- 连接地址：`ws://localhost:8080/ws/chat/{token}`
+- 消息格式：JSON `{ content: "问题内容", sessionId: "会话ID" }`
+- 支持多会话管理和历史记录持久化
+
+### 3. ECharts 可视化图表
+
+- 饼图：费用类型分布
+- 折线图：支出趋势 + AI 预测（虚线）
+- 散点图：K-Means 聚类分析
+- 力导向图：消费知识图谱
+
+### 4. 文件上传与预览
+
+- 支持格式：JPG, PNG, PDF
+- 大小限制：10MB
+- 本地预览：`URL.createObjectURL()`
+- PDF 预览：`<embed>` 标签内嵌
+
+### 5. Excel 导出
+
+- 后端生成 `.xlsx` 文件
+- 前端通过 `responseType: 'blob'` 接收二进制流
+- 使用 `URL.createObjectURL` + `<a>` 标签触发下载
 
 ---
 
 ## 🎨 推荐 IDE 配置
 
-### VS Code
+### VS Code 插件
 
-- [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) - Vue 3 官方插件
-- [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin)
-- [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
-- [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+| 插件名称                       | 用途                   |
+| ------------------------------ | ---------------------- |
+| Vue - Official (Volar)         | Vue 3 官方语言支持     |
+| TypeScript Vue Plugin (Volar)  | TS + Vue 集成          |
+| ESLint                         | 代码质量检查           |
+| Prettier                       | 代码格式化             |
 
-> 注意：如已安装 Vetur 插件，请禁用以避免冲突。
+> ⚠️ 注意：如已安装 Vetur 插件，请禁用以避免冲突。
 
 ### 浏览器调试工具
 
@@ -147,19 +328,10 @@ VITE_API_BASE_URL=http://localhost:8080
 
 ## 📝 开发注意事项
 
-1. **TypeScript 类型支持**：已在 `env.d.ts` 中声明 `.vue` 文件模块，确保 IDE 正确识别。
-2. **Element Plus 按需引入**：当前为完整引入，如需优化打包体积可配置自动导入。
-3. **状态持久化**：用户信息存储于 `localStorage`，刷新页面后自动恢复登录状态。
-
----
-
-## 🔗 相关链接
-
-- [Vite 配置文档](https://vite.dev/config/)
-- [Vue 3 官方文档](https://vuejs.org/)
-- [Element Plus 文档](https://element-plus.org/)
-- [Vue Router 文档](https://router.vuejs.org/)
-- [Apache ECharts 文档](https://echarts.apache.org/)
+1. **TypeScript 类型支持**：已在 `env.d.ts` 中声明 `.vue` 文件模块类型
+2. **Element Plus 引入方式**：当前为完整引入，如需优化打包体积可配置自动按需导入
+3. **状态持久化**：用户信息存储于 `localStorage`，刷新页面后自动恢复登录状态
+4. **UUID 依赖**：AI 对话会话管理使用 `uuid` 库生成唯一会话 ID
 
 ---
 
@@ -172,9 +344,42 @@ VITE_API_BASE_URL=http://localhost:8080
   "pinia": "^3.0.4",
   "element-plus": "latest",
   "axios": "latest",
-  "echarts": "latest"
+  "echarts": "latest",
+  "uuid": "latest"
 }
 ```
+
+---
+
+## 🔗 相关链接
+
+| 资源         | 链接                                    |
+| ------------ | --------------------------------------- |
+| Vite 文档    | https://vite.dev/config/                |
+| Vue 3 文档   | https://vuejs.org/                      |
+| Element Plus | https://element-plus.org/               |
+| Vue Router   | https://router.vuejs.org/               |
+| ECharts      | https://echarts.apache.org/             |
+| Pinia        | https://pinia.vuejs.org/                |
+
+---
+
+## 📸 功能截图说明
+
+### 系统亮点功能
+
+| 功能模块       | 核心亮点                                           |
+| -------------- | -------------------------------------------------- |
+| 智能归档       | AI OCR + LLM 自动识别票据信息，一键归档            |
+| 数据报表       | 线性回归算法预测下月支出                           |
+| AI 财务顾问    | DeepSeek-V3 大模型驱动，WebSocket 实时对话         |
+| 消费聚类分析   | K-Means 算法 + AI 消费画像解读                     |
+| 消费知识图谱   | 力导向布局可视化用户-分类-商户关联                 |
+| 异常检测       | 自动标记金额偏离历史习惯的异常消费                 |
+| 预算预警       | 进度条可视化 + 超支/预警状态提示                   |
+| 软删除机制     | 回收站支持还原，永久删除需二次确认                 |
+| 审批流程       | 管理员独立工作台，支持通过/驳回操作                |
+| 数据安全       | JSON 格式完整备份，支持一键恢复                    |
 
 ---
 
@@ -182,4 +387,12 @@ VITE_API_BASE_URL=http://localhost:8080
 
 本项目为课程设计/毕业设计参考项目，欢迎提出改进建议。
 
-**License**: MIT
+如有问题或建议，请提交 Issue 或 Pull Request。
+
+---
+
+## 📜 License
+
+MIT License
+
+Copyright (c) 2025 SmartDoc Team
