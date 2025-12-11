@@ -1,5 +1,19 @@
+<!--
+  DocList.vue
+  归档记录列表页面
+
+  本组件是应用的核心功能之一，用于展示、搜索、管理用户的票据归档记录。
+  主要功能包括：
+  - 顶部搜索区域，支持按关键字和分类筛选。
+  - 使用 Element Plus 的虚拟化表格 (el-table-v2) 高效展示大量数据。
+  - 提供操作按钮，包括提交审核、查看详情、修改和删除。
+  - 弹窗展示票据详情和提供编辑表单。
+  - 基于用户角色（管理员/普通用户）控制操作权限。
+-->
 <template>
+  <!-- 页面主容器，采用 flex 纵向布局 -->
   <div class="list-container">
+    <!-- 顶部搜索区域 -->
     <div class="search-section">
       <el-card shadow="hover" :body-style="{ padding: '18px 20px 0 20px' }">
         <el-form :inline="true" :model="searchForm" class="search-form">
@@ -9,7 +23,7 @@
               placeholder="搜索商户/项目..."
               prefix-icon="Search"
               clearable
-              @input="handleSearch"
+              @input="handleSearch" 
             />
           </el-form-item>
           <el-form-item label="分类">
@@ -35,12 +49,14 @@
       </el-card>
     </div>
 
+    <!-- 表格区域 -->
     <div class="table-section">
       <el-card
         shadow="never"
         class="table-card-wrapper"
         :body-style="{ padding: '0', display: 'flex', flexDirection: 'column', height: '100%' }"
       >
+        <!-- 表格工具栏，包含标题和新增按钮 -->
         <div class="table-toolbar">
           <div class="left-panel">
             <span class="title">🧾 归档记录</span>
@@ -53,16 +69,18 @@
           </el-button>
         </div>
 
+        <!-- 表格内容区域，使用 el-auto-resizer 自动计算宽高 -->
         <div class="table-content">
           <el-auto-resizer>
             <template #default="{ width, height }">
+              <!-- Element Plus 虚拟化表格，用于高性能渲染大数据列表 -->
               <el-table-v2
                 class="virtual-table"
-                :data="displayData"
-                :columns="columns"
-                :row-height="54"
+                :data="displayData" 
+                :columns="columns" 
+                :row-height="54" 
                 :header-height="44"
-                :width="width"
+                :width="width" 
                 :height="height"
                 row-key="id"
                 v-loading="loading"
@@ -73,8 +91,10 @@
       </el-card>
     </div>
 
+    <!-- 票据详情弹窗 -->
     <el-dialog v-model="dialogVisible" title="🧾 票据详情" width="450px" align-center>
       <div v-if="currentRow" class="detail-content">
+        <!-- 驳回提示 -->
         <el-alert
           v-if="currentRow.status === 3"
           :title="'申请已被驳回：' + (currentRow.auditRemark || '无原因')"
@@ -83,6 +103,7 @@
           :closable="false"
           style="margin-bottom: 15px"
         />
+        <!-- 风险预警提示 -->
         <el-alert
           v-if="currentRow.isAnomaly === 1"
           title="风险预警：金额异常"
@@ -93,6 +114,7 @@
           style="margin-bottom: 15px"
         />
 
+        <!-- 详情字段 -->
         <div class="detail-item">
           <label>审批状态：</label>
           <el-tag v-if="currentRow.status === 0" type="info">草稿</el-tag>
@@ -129,6 +151,7 @@
       </template>
     </el-dialog>
 
+    <!-- 修改归档信息弹窗 -->
     <el-dialog v-model="editDialogVisible" title="✏️ 修改归档信息" width="500px" align-center>
       <el-form :model="editForm" label-width="90px">
         <el-form-item label="商户名称">
@@ -182,22 +205,28 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * @file DocList.vue - 归档记录列表页面的脚本
+ * @description 负责数据获取、状态管理、用户交互和权限控制。
+ */
+
+// --- 依赖导入 ---
 import { ref, reactive, onMounted, computed, h } from 'vue'
 import { Search, Plus, Refresh, Warning, View, Edit, Delete, Top } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, ElTag, ElTooltip, ElButton } from 'element-plus'
 import axios from 'axios'
 
 // --- 状态定义 ---
-const loading = ref(false)
-const allTableData = ref<any[]>([])
-const displayData = ref<any[]>([])
-const dialogVisible = ref(false)
-const currentRow = ref<any>(null)
+const loading = ref(false) // 控制表格加载状态
+const allTableData = ref<any[]>([]) // 存储从后端获取的所有原始数据
+const displayData = ref<any[]>([]) // 存储经过筛选后在表格中实际显示的数据
+const dialogVisible = ref(false) // 控制详情弹窗的显示
+const currentRow = ref<any>(null) // 存储当前操作或查看的行数据
 
-// 修改相关
-const editDialogVisible = ref(false)
-const editLoading = ref(false)
-const editForm = reactive({
+// --- 修改功能相关状态 ---
+const editDialogVisible = ref(false) // 控制修改弹窗的显示
+const editLoading = ref(false) // 控制修改表单提交的加载状态
+const editForm = reactive({ // 修改表单的数据模型
   id: 0,
   merchantName: '',
   itemName: '',
@@ -207,16 +236,24 @@ const editForm = reactive({
   invoiceCode: '',
   userId: 0,
   createTime: '',
-  status: 0, // 保留原状态
+  status: 0, 
   auditRemark: '',
 })
 
+// --- 搜索功能相关状态 ---
 const searchForm = reactive({ keyword: '', category: '' })
 
 // --- 计算属性 ---
+
+// 计算当前显示数据的总条数
 const total = computed(() => displayData.value.length)
 
-/** 当前用户是否为管理员 */
+/**
+ * @computed isAdmin
+ * @description 判断当前登录用户是否为管理员。
+ *              通过读取 localStorage 中的用户信息并检查其 `role` 字段来实现。
+ *              提供了一个安全的默认值 false。
+ */
 const isAdmin = computed(() => {
   try {
     const userStr = localStorage.getItem('user')
@@ -231,65 +268,92 @@ const isAdmin = computed(() => {
 })
 
 /**
- * 判断是否可以编辑记录
- * - admin 用户: 始终可以编辑
- * - 普通用户: 只有状态为“草稿(0)”或“已驳回(3)”时可编辑
+ * @function canEdit
+ * @description 根据记录的状态和用户角色判断是否可以编辑或删除。
+ * @param {number} status - 记录的审批状态。
+ * @returns {boolean} - 如果可编辑则返回 true，否则返回 false。
+ * - 管理员 (isAdmin) 总是可以编辑。
+ * - 普通用户只能在记录为“草稿”(0) 或“已驳回”(3) 状态时进行编辑。
  */
 const canEdit = (status: number) => {
   if (isAdmin.value) return true
   return status === 0 || status === 3
 }
 
-// --- 方法 ---
+// --- 数据获取与生命周期 ---
 
+/**
+ * @function fetchList
+ * @description 从后端获取所有归档记录列表。
+ * @async
+ */
 const fetchList = async () => {
   loading.value = true
   try {
     const res = await axios.get('http://localhost:8080/api/doc/list')
-    allTableData.value = res.data
-    handleSearch()
+    allTableData.value = res.data // 存储完整数据
+    handleSearch() // 获取数据后立即执行一次搜索，以应用默认筛选并更新视图
   } catch (error) {
-    ElMessage.error('无法连接到数据库')
+    ElMessage.error('数据加载失败，请检查网络连接')
   } finally {
     loading.value = false
   }
 }
 
+// 组件挂载后立即获取数据
 onMounted(() => {
   fetchList()
 })
 
-// 搜索
+// --- 交互方法 ---
+
+/**
+ * @function handleSearch
+ * @description 根据搜索表单的条件筛选数据并更新 `displayData`。
+ */
 const handleSearch = () => {
   displayData.value = allTableData.value.filter((item) => {
-    const matchName =
+    const matchName = // 关键字匹配逻辑
       !searchForm.keyword ||
       (item.merchantName && item.merchantName.includes(searchForm.keyword)) ||
       (item.itemName && item.itemName.includes(searchForm.keyword))
-    const matchCat = !searchForm.category || item.category === searchForm.category
+    const matchCat = !searchForm.category || item.category === searchForm.category // 分类匹配逻辑
     return matchName && matchCat
   })
 }
 
+/**
+ * @function resetSearch
+ * @description 重置搜索条件并重新加载数据。
+ */
 const resetSearch = () => {
   searchForm.keyword = ''
   searchForm.category = ''
   handleSearch()
 }
 
-// 详情
+/**
+ * @function viewDetail
+ * @description 打开详情弹窗并设置当前行数据。
+ * @param {any} row - 表格行数据。
+ */
 const viewDetail = (row: any) => {
   currentRow.value = row
   dialogVisible.value = true
 }
 
-// 🔥 核心：提交审核
+/**
+ * @function handleSubmit
+ * @description 提交指定 ID 的记录进行审核。
+ * @param {number} id - 记录的 ID。
+ * @async
+ */
 const handleSubmit = async (id: number) => {
   try {
     const res = await axios.post(`http://localhost:8080/api/audit/submit/${id}`)
     if (res.data.code === 200) {
-      ElMessage.success('已提交申请')
-      fetchList()
+      ElMessage.success('已提交审核申请')
+      fetchList() // 成功后刷新列表
     } else {
       ElMessage.error(res.data.msg)
     }
@@ -298,12 +362,21 @@ const handleSubmit = async (id: number) => {
   }
 }
 
-// 修改按钮
+/**
+ * @function handleEdit
+ * @description 打开修改弹窗并填充当前行的数据。
+ * @param {any} row - 表格行数据。
+ */
 const handleEdit = (row: any) => {
-  Object.assign(editForm, row)
+  Object.assign(editForm, row) // 将行数据复制到编辑表单模型中
   editDialogVisible.value = true
 }
 
+/**
+ * @function submitEdit
+ * @description 提交修改后的表单数据。
+ * @async
+ */
 const submitEdit = async () => {
   editLoading.value = true
   try {
@@ -311,7 +384,7 @@ const submitEdit = async () => {
     if (res.data === 'success') {
       ElMessage.success('修改成功')
       editDialogVisible.value = false
-      fetchList()
+      fetchList() // 成功后刷新列表
     } else {
       ElMessage.error('修改失败：' + res.data)
     }
@@ -322,23 +395,33 @@ const submitEdit = async () => {
   }
 }
 
-// 删除
+/**
+ * @function handleDelete
+ * @description 删除指定行的数据，并带有确认提示框。
+ * @param {any} row - 表格行数据。
+ */
 const handleDelete = (row: any) => {
-  ElMessageBox.confirm(`确定删除【${row.merchantName}】的记录吗？`, '警告', {
-    confirmButtonText: '删除',
+  ElMessageBox.confirm(`确定删除【${row.merchantName}】的记录吗？此操作不可恢复。`, '警告', {
+    confirmButtonText: '确认删除',
     cancelButtonText: '取消',
     type: 'warning',
   }).then(async () => {
     try {
       await axios.delete(`http://localhost:8080/api/doc/delete/${row.id}`)
       ElMessage.success('删除成功')
-      fetchList()
+      fetchList() // 成功后刷新列表
     } catch (error) {
       ElMessage.error('删除失败')
     }
   })
 }
 
+/**
+ * @function getCategoryType
+ * @description 根据分类名称返回对应的 Element Plus 标签类型 (type)。
+ * @param {string} cat - 分类名称。
+ * @returns {string} - 'warning', 'success', 'info', 'primary', or ''
+ */
 const getCategoryType = (cat: string) => {
   if (cat?.includes('餐饮')) return 'warning'
   if (cat?.includes('交通')) return 'success'
@@ -347,32 +430,35 @@ const getCategoryType = (cat: string) => {
   return ''
 }
 
-// 虚拟表格列定义（Element Plus TableV2）
+// --- 虚拟化表格列定义 (使用 Vue 的 h 函数进行高级渲染) ---
+
 const columns = computed(() => [
   {
     key: 'index',
-    title: '#',
-    width: 60,
-    fixed: 'left',
-    align: 'center',
-    cellRenderer: ({ rowIndex }: any) => rowIndex + 1,
+    title: '#', // 列标题
+    width: 60, // 列宽
+    fixed: 'left', // 固定在左侧
+    align: 'center', // 居中对齐
+    // cellRenderer 用于自定义单元格的渲染方式
+    cellRenderer: ({ rowIndex }: any) => rowIndex + 1, // 显示行号
   },
   {
     key: 'date',
     title: '开票日期',
     width: 120,
     align: 'center',
-    cellRenderer: ({ rowData }: any) => rowData.date || '-',
+    cellRenderer: ({ rowData }: any) => rowData.date || '-', // 显示日期，如果为空则显示 '-'
   },
   {
     key: 'itemName',
     title: '项目名称',
     width: 180,
+    // 使用 h 函数创建一个带 title 的 span，实现鼠标悬浮时显示完整内容
     cellRenderer: ({ rowData }: any) =>
       h(
         'span',
         { class: 'ellipsis-cell', title: rowData.itemName || '-' },
-        rowData.itemName || '-',
+        rowData.itemName || '-'
       ),
   },
   {
@@ -383,7 +469,7 @@ const columns = computed(() => [
       h(
         'span',
         { class: 'ellipsis-cell', title: rowData.merchantName || '-' },
-        rowData.merchantName || '-',
+        rowData.merchantName || '-'
       ),
   },
   {
@@ -391,11 +477,12 @@ const columns = computed(() => [
     title: '分类',
     width: 120,
     align: 'center',
+    // 使用 h 函数渲染一个 Element Plus 的 ElTag 组件
     cellRenderer: ({ rowData }: any) =>
       h(
         ElTag,
         { type: getCategoryType(rowData.category), size: 'small', effect: 'light' },
-        () => rowData.category || '-',
+        () => rowData.category || '-'
       ),
   },
   {
@@ -405,27 +492,27 @@ const columns = computed(() => [
     align: 'right',
     cellRenderer: ({ rowData }: any) => {
       const amountText = `￥${Number(rowData.amount || 0).toFixed(2)}`
+      // 创建金额文本的 span 元素，如果金额异常则标红
       const amountSpan = h(
         'span',
         {
           class: 'amount-text',
           style: rowData.isAnomaly === 1 ? 'color:#F56C6C' : 'color:#303133',
         },
-        amountText,
+        amountText
       )
 
+      // 如果是异常金额，则创建一个带 Tooltip 的警告图标
       const anomalyIcon =
         rowData.isAnomaly === 1
           ? h(
               ElTooltip,
-              {
-                content: '⚠️ 智能审计：该笔金额显著偏离您的历史消费习惯。',
-                placement: 'top',
-              },
-              () => h(Warning, { style: 'color:#F56C6C', size: 16, class: 'shaking-icon' }),
+              { content: '⚠️ 智能审计：该笔金额显著偏离您的历史消费习惯。', placement: 'top' },
+              () => h(Warning, { style: 'color:#F56C6C', size: 16, class: 'shaking-icon' })
             )
           : null
 
+      // 将金额文本和警告图标（如果存在）包裹在一个 div 中返回
       return h('div', { class: 'amount-cell' }, [amountSpan, anomalyIcon].filter(Boolean))
     },
   },
@@ -440,10 +527,11 @@ const columns = computed(() => [
       if (status === 1) return h(ElTag, { type: 'warning' }, () => '审核中')
       if (status === 2) return h(ElTag, { type: 'success' }, () => '已通过')
       if (status === 3) {
+        // 对于“已驳回”状态，使用 Tooltip 显示驳回原因
         return h(
           ElTooltip,
           { content: `驳回原因: ${rowData.auditRemark || '无'}`, placement: 'top' },
-          () => h(ElTag, { type: 'danger', style: 'cursor: help' }, () => '已驳回'),
+          () => h(ElTag, { type: 'danger', style: 'cursor: help' }, () => '已驳回')
         )
       }
       return h(ElTag, { type: 'info' }, () => '-')
@@ -458,7 +546,7 @@ const columns = computed(() => [
       h(
         'span',
         { class: 'ellipsis-cell', title: rowData.invoiceCode || '-' },
-        rowData.invoiceCode || '-',
+        rowData.invoiceCode || '-'
       ),
   },
   {
@@ -466,95 +554,64 @@ const columns = computed(() => [
     title: '操作',
     width: 240,
     align: 'center',
-    fixed: 'right',
+    fixed: 'right', // 固定在右侧
     cellRenderer: ({ rowData }: any) => {
       const buttons = []
 
+      // 仅在“草稿”或“已驳回”状态下显示“提交”按钮
       if (rowData.status === 0 || rowData.status === 3) {
         buttons.push(
-          h(
-            ElButton,
-            {
-              link: true,
-              size: 'small',
-              type: 'success',
-              icon: Top,
-              onClick: () => handleSubmit(rowData.id),
-            },
-            () => '提交',
-          ),
+          h(ElButton, { link: true, size: 'small', type: 'success', icon: Top, onClick: () => handleSubmit(rowData.id) }, () => '提交')
         )
       }
 
+      // “详情”按钮始终显示
       buttons.push(
-        h(
-          ElButton,
-          {
-            link: true,
-            size: 'small',
-            type: 'primary',
-            icon: View,
-            onClick: () => viewDetail(rowData),
-          },
-          () => '详情',
-        ),
+        h(ElButton, { link: true, size: 'small', type: 'primary', icon: View, onClick: () => viewDetail(rowData) }, () => '详情')
       )
 
-      // 修改按钮: admin 始终可用，普通用户仅草稿/已驳回时可用
+      // “修改”按钮：根据 canEdit 函数的返回值决定是否禁用
       buttons.push(
-        h(
-          ElButton,
-          {
-            link: true,
-            size: 'small',
-            type: 'primary',
-            icon: Edit,
-            disabled: !canEdit(rowData.status),
-            onClick: () => handleEdit(rowData),
-          },
-          () => '修改',
-        ),
+        h(ElButton, { link: true, size: 'small', type: 'primary', icon: Edit, disabled: !canEdit(rowData.status), onClick: () => handleEdit(rowData) }, () => '修改')
       )
 
-      // 删除按钮: admin 始终可用，普通用户仅草稿/已驳回时可用
+      // “删除”按钮：根据 canEdit 函数的返回值决定是否禁用
       buttons.push(
-        h(
-          ElButton,
-          {
-            link: true,
-            size: 'small',
-            type: 'danger',
-            icon: Delete,
-            disabled: !canEdit(rowData.status),
-            onClick: () => handleDelete(rowData),
-          },
-          () => '删除',
-        ),
+        h(ElButton, { link: true, size: 'small', type: 'danger', icon: Delete, disabled: !canEdit(rowData.status), onClick: () => handleDelete(rowData) }, () => '删除')
       )
 
+      // 将所有按钮包裹在一个 div 中返回
       return h('div', { class: 'action-cell' }, buttons)
     },
   },
 ])
 </script>
 
+<!--
+  Scoped CSS
+  - `scoped` 属性确保样式仅应用于当前组件。
+-->
 <style scoped>
+/* 页面主容器，使用 flex 布局实现垂直分布和间距 */
 .list-container {
   height: 100%;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
+/* 搜索区域卡片样式 */
 .search-section .el-card {
   border-radius: 8px;
   border: none;
 }
+/* 表格区域容器，flex: 1 使其填充剩余空间 */
 .table-section {
   flex: 1;
-  min-height: 0;
+  min-height: 0; /* 防止 flex 子项在内容过多时溢出父容器 */
   display: flex;
   flex-direction: column;
 }
+/* 表格卡片包装器，确保其高度充满父容器 */
 .table-card-wrapper {
   height: 100%;
   border-radius: 8px;
@@ -562,25 +619,29 @@ const columns = computed(() => [
   display: flex;
   flex-direction: column;
 }
+/* 表格顶部的工具栏 */
 .table-toolbar {
   padding: 16px;
   border-bottom: 1px solid #ebeef5;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-shrink: 0;
+  flex-shrink: 0; /* 防止工具栏被压缩 */
 }
+/* 工具栏标题样式 */
 .title {
   font-weight: 600;
   font-size: 16px;
   color: #303133;
 }
+/* 表格内容区域，flex: 1 填充卡片剩余空间 */
 .table-content {
   flex: 1;
-  overflow: hidden;
+  overflow: hidden; /* 隐藏 AutoResizer 之外的溢出 */
   padding: 0 16px;
 }
 
+/* 详情弹窗内的项目样式 */
 .detail-item {
   display: flex;
   margin-bottom: 12px;
@@ -601,33 +662,22 @@ const columns = computed(() => [
   flex: 1;
 }
 
+/* 风险预警图标的晃动动画 */
 .shaking-icon {
   animation: shake 2s infinite;
   cursor: help;
 }
 @keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  10%,
-  30%,
-  50%,
-  70%,
-  90% {
-    transform: translateX(-2px);
-  }
-  20%,
-  40%,
-  60%,
-  80% {
-    transform: translateX(2px);
-  }
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
 }
 
+/* 确保虚拟表格高度正确 */
 .virtual-table {
   height: 100%;
 }
+/* 用于长文本单元格的省略号样式 */
 .ellipsis-cell {
   display: inline-block;
   max-width: 100%;
@@ -635,12 +685,14 @@ const columns = computed(() => [
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* 金额单元格样式，实现右对齐和图标间距 */
 .amount-cell {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
 }
+/* 操作按钮单元格样式，实现居中和间距 */
 .action-cell {
   display: flex;
   align-items: center;
