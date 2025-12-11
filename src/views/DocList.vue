@@ -73,55 +73,67 @@
       </el-card>
     </div>
 
-    <el-dialog v-model="dialogVisible" title="🧾 票据详情" width="450px" align-center>
-      <div v-if="currentRow" class="detail-content">
-        <el-alert
-          v-if="currentRow.status === 3"
-          :title="'申请已被驳回：' + (currentRow.auditRemark || '无原因')"
-          type="error"
-          show-icon
-          :closable="false"
-          style="margin-bottom: 15px"
-        />
-        <el-alert
-          v-if="currentRow.isAnomaly === 1"
-          title="风险预警：金额异常"
-          type="warning"
-          description="该发票金额远超同类目平均水平。"
-          show-icon
-          :closable="false"
-          style="margin-bottom: 15px"
-        />
+    <el-dialog v-model="dialogVisible" title="🧾 票据详情" width="80vw" top="5vh" align-center class="preview-dialog">
+      <div v-if="currentRow" class="detail-dialog-content">
+        <!-- Left: Preview -->
+        <div class="preview-pane">
+          <vue-pdf-embed v-if="isPdf" :source="fileUrl" class="pdf-viewer" />
+          <div v-else-if="fileUrl" v-viewer class="image-viewer">
+             <img :src="fileUrl" alt="发票图片" />
+          </div>
+          <div v-else class="no-file-tip">无可用预览文件</div>
+        </div>
 
-        <div class="detail-item">
-          <label>审批状态：</label>
-          <el-tag v-if="currentRow.status === 0" type="info">草稿</el-tag>
-          <el-tag v-else-if="currentRow.status === 1" type="warning">审核中</el-tag>
-          <el-tag v-else-if="currentRow.status === 2" type="success">已通过</el-tag>
-          <el-tag v-else-if="currentRow.status === 3" type="danger">已驳回</el-tag>
-        </div>
-        <div class="detail-item">
-          <label>商户名称：</label><span>{{ currentRow.merchantName }}</span>
-        </div>
-        <div class="detail-item">
-          <label>项目名称：</label><span>{{ currentRow.itemName || '-' }}</span>
-        </div>
-        <div class="detail-item">
-          <label>发票号码：</label><span>{{ currentRow.invoiceCode || '-' }}</span>
-        </div>
-        <div class="detail-item">
-          <label>开票日期：</label><span>{{ currentRow.date }}</span>
-        </div>
-        <div class="detail-item">
-          <label>归档金额：</label
-          ><span style="font-weight: bold">￥{{ Number(currentRow.amount).toFixed(2) }}</span>
-        </div>
-        <div class="detail-item">
-          <label>智能分类：</label><el-tag>{{ currentRow.category }}</el-tag>
-        </div>
-        <div class="detail-item">
-          <label>创建时间：</label
-          ><span style="color: #999">{{ currentRow.createTime?.replace('T', ' ') }}</span>
+        <!-- Right: Details -->
+        <div class="detail-pane">
+          <el-alert
+            v-if="currentRow.status === 3"
+            :title="'申请已被驳回：' + (currentRow.auditRemark || '无原因')"
+            type="error"
+            show-icon
+            :closable="false"
+            style="margin-bottom: 15px"
+          />
+          <el-alert
+            v-if="currentRow.isAnomaly === 1"
+            title="风险预警：金额异常"
+            type="warning"
+            description="该发票金额远超同类目平均水平。"
+            show-icon
+            :closable="false"
+            style="margin-bottom: 15px"
+          />
+
+          <div class="detail-item">
+            <label>审批状态：</label>
+            <el-tag v-if="currentRow.status === 0" type="info">草稿</el-tag>
+            <el-tag v-else-if="currentRow.status === 1" type="warning">审核中</el-tag>
+            <el-tag v-else-if="currentRow.status === 2" type="success">已通过</el-tag>
+            <el-tag v-else-if="currentRow.status === 3" type="danger">已驳回</el-tag>
+          </div>
+          <div class="detail-item">
+            <label>商户名称：</label><span>{{ currentRow.merchantName }}</span>
+          </div>
+          <div class="detail-item">
+            <label>项目名称：</label><span>{{ currentRow.itemName || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>发票号码：</label><span>{{ currentRow.invoiceCode || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>开票日期：</label><span>{{ currentRow.date }}</span>
+          </div>
+          <div class="detail-item">
+            <label>归档金额：</label
+            ><span style="font-weight: bold">￥{{ Number(currentRow.amount).toFixed(2) }}</span>
+          </div>
+          <div class="detail-item">
+            <label>智能分类：</label><el-tag>{{ currentRow.category }}</el-tag>
+          </div>
+          <div class="detail-item">
+            <label>创建时间：</label
+            ><span style="color: #999">{{ currentRow.createTime?.replace('T', ' ') }}</span>
+          </div>
         </div>
       </div>
       <template #footer>
@@ -186,6 +198,9 @@ import { ref, reactive, onMounted, computed, h } from 'vue'
 import { Search, Plus, Refresh, Warning, View, Edit, Delete, Top } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, ElTag, ElTooltip, ElButton } from 'element-plus'
 import axios from 'axios'
+import VuePdfEmbed from 'vue-pdf-embed'
+import 'viewerjs/dist/viewer.css'
+import { directive as viewer } from 'v-viewer'
 
 // --- 状态定义 ---
 const loading = ref(false)
@@ -215,6 +230,17 @@ const searchForm = reactive({ keyword: '', category: '' })
 
 // --- 计算属性 ---
 const total = computed(() => displayData.value.length)
+
+const fileUrl = computed(() => {
+  if (currentRow.value?.rawImageUrl) {
+    return `http://localhost:8080${currentRow.value.rawImageUrl}`
+  }
+  return ''
+})
+
+const isPdf = computed(() => {
+  return fileUrl.value.toLowerCase().endsWith('.pdf')
+})
 
 /** 当前用户是否为管理员 */
 const isAdmin = computed(() => {
@@ -474,13 +500,7 @@ const columns = computed(() => [
         buttons.push(
           h(
             ElButton,
-            {
-              link: true,
-              size: 'small',
-              type: 'success',
-              icon: Top,
-              onClick: () => handleSubmit(rowData.id),
-            },
+            { link: true, size: 'small', type: 'success', icon: Top, onClick: () => handleSubmit(rowData.id) },
             () => '提交',
           ),
         )
@@ -489,13 +509,7 @@ const columns = computed(() => [
       buttons.push(
         h(
           ElButton,
-          {
-            link: true,
-            size: 'small',
-            type: 'primary',
-            icon: View,
-            onClick: () => viewDetail(rowData),
-          },
+          { link: true, size: 'small', type: 'primary', icon: View, onClick: () => viewDetail(rowData) },
           () => '详情',
         ),
       )
@@ -504,14 +518,7 @@ const columns = computed(() => [
       buttons.push(
         h(
           ElButton,
-          {
-            link: true,
-            size: 'small',
-            type: 'primary',
-            icon: Edit,
-            disabled: !canEdit(rowData.status),
-            onClick: () => handleEdit(rowData),
-          },
+          { link: true, size: 'small', type: 'primary', icon: Edit, disabled: !canEdit(rowData.status), onClick: () => handleEdit(rowData) },
           () => '修改',
         ),
       )
@@ -520,14 +527,7 @@ const columns = computed(() => [
       buttons.push(
         h(
           ElButton,
-          {
-            link: true,
-            size: 'small',
-            type: 'danger',
-            icon: Delete,
-            disabled: !canEdit(rowData.status),
-            onClick: () => handleDelete(rowData),
-          },
+          { link: true, size: 'small', type: 'danger', icon: Delete, disabled: !canEdit(rowData.status), onClick: () => handleDelete(rowData) },
           () => '删除',
         ),
       )
@@ -536,6 +536,8 @@ const columns = computed(() => [
     },
   },
 ])
+
+const vViewer = viewer
 </script>
 
 <style scoped>
@@ -579,6 +581,41 @@ const columns = computed(() => [
   flex: 1;
   overflow: hidden;
   padding: 0 16px;
+}
+
+/* --- 弹窗样式 --- */
+.detail-dialog-content {
+  display: flex;
+  height: 75vh; /* 让弹窗内容撑满高度 */
+  gap: 20px;
+}
+.preview-pane {
+  flex: 3; /* 预览区域占 3/5 */
+  background-color: #f5f7fa;
+  border-radius: 8px;
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.detail-pane {
+  flex: 2; /* 详情区域占 2/5 */
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.pdf-viewer {
+  width: 100%;
+}
+
+.image-viewer img {
+  max-width: 100%;
+  cursor: zoom-in;
+}
+
+.no-file-tip {
+  color: #909399;
+  font-size: 16px;
 }
 
 .detail-item {
