@@ -23,7 +23,7 @@
               placeholder="搜索商户/项目..."
               prefix-icon="Search"
               clearable
-              @input="handleSearch" 
+              @input="onSearchInput" 
             />
           </el-form-item>
           <el-form-item label="分类">
@@ -242,6 +242,7 @@ const editForm = reactive({ // 修改表单的数据模型
 
 // --- 搜索功能相关状态 ---
 const searchForm = reactive({ keyword: '', category: '' })
+let searchTimer: any = null
 
 // --- 计算属性 ---
 
@@ -311,6 +312,13 @@ onMounted(() => {
  * @function handleSearch
  * @description 根据搜索表单的条件筛选数据并更新 `displayData`。
  */
+const onSearchInput = () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => {
+    handleSearch()
+  }, 300) // 延迟300毫秒执行
+}
+
 const handleSearch = () => {
   displayData.value = allTableData.value.filter((item) => {
     const matchName = // 关键字匹配逻辑
