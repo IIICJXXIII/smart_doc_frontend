@@ -9,35 +9,44 @@ https://github.com/IIICJXXIII/smart_doc_backend
 
 ## ✨ 技术栈
 
-- **核心框架**：Vue 3 (Composition API)
-- **开发语言**：TypeScript
-- **构建工具**：Vite 7.x
-- **UI 组件库**：Element Plus
-- **路由管理**：Vue Router 4
-- **状态管理**：Pinia
-- **图表库**：Apache ECharts
-- **HTTP 请求**：Axios
+| 技术 | 版本 | 说明 |
+|-----|------|-----|
+| **核心框架** | Vue 3.5.25 | Composition API |
+| **开发语言** | TypeScript 5.9 | 类型安全 |
+| **构建工具** | Vite 7.2.4 | 下一代前端构建工具 |
+| **UI 组件库** | Element Plus 2.12.0 | Vue 3 组件库 |
+| **路由管理** | Vue Router 4.6.3 | 官方路由 |
+| **状态管理** | Pinia 3.0.4 | Vue 3 官方状态管理 |
+| **图表库** | ECharts 6.0.0 | 数据可视化 |
+| **HTTP 请求** | Axios 1.13.2 | HTTP 客户端 |
 
 ---
 
 ## 📂 项目结构
 
 ```plaintext
-src/
-├── assets/              # 静态资源 (CSS, 图片等)
-├── components/          # 可复用组件
-├── router/              # 路由配置
-│   └── index.ts         # 路由守卫 & 路由表
-├── stores/              # Pinia 状态管理
-├── views/               # 页面组件
-│   ├── Login.vue        # 登录页
-│   ├── Register.vue     # 注册页
-│   ├── SmartUploader.vue # 智能上传识别页
-│   ├── DocList.vue      # 归档记录列表
-│   └── StatsDashboard.vue # 数据统计看板
-├── App.vue              # 根组件 (侧边栏 + 路由出口)
-├── main.ts              # 应用入口 (Axios 拦截器配置)
-└── env.d.ts             # TypeScript 类型声明
+smart_doc_frontend/
+├── public/              # 公共静态资源
+├── src/
+│   ├── assets/          # 静态资源 (CSS, 图片等)
+│   ├── components/      # 可复用组件
+│   ├── router/          # 路由配置
+│   │   └── index.ts     # 路由守卫 & 路由表
+│   ├── stores/          # Pinia 状态管理
+│   ├── views/           # 页面组件
+│   │   ├── Login.vue        # 登录页
+│   │   ├── Register.vue     # 注册页
+│   │   ├── SmartUploader.vue # 智能上传识别页
+│   │   ├── DocList.vue      # 归档记录列表
+│   │   └── StatsDashboard.vue # 数据统计看板
+│   ├── App.vue          # 根组件 (侧边栏 + 路由出口)
+│   └── main.ts          # 应用入口 (Axios 拦截器配置)
+├── env.d.ts             # TypeScript 类型声明
+├── index.html           # HTML 入口
+├── package.json         # 项目依赖配置
+├── tsconfig.json        # TypeScript 配置
+├── vite.config.ts       # Vite 配置
+└── README.md            # 项目说明文档
 ```
 
 ---
@@ -46,8 +55,8 @@ src/
 
 ### 1. 环境要求
 
-- **Node.js**: 16.0 或更高版本
-- **npm**: 7.0+
+- **Node.js**: `^20.19.0` 或 `>=22.12.0`
+- **npm**: 9.0+ (推荐使用 npm 10+)
 
 ### 2. 安装依赖
 
@@ -159,6 +168,7 @@ VITE_API_BASE_URL=http://localhost:8080
 - [Vue 3 官方文档](https://vuejs.org/)
 - [Element Plus 文档](https://element-plus.org/)
 - [Vue Router 文档](https://router.vuejs.org/)
+- [Pinia 官方文档](https://pinia.vuejs.org/)
 - [Apache ECharts 文档](https://echarts.apache.org/)
 
 ---
@@ -170,9 +180,23 @@ VITE_API_BASE_URL=http://localhost:8080
   "vue": "^3.5.25",
   "vue-router": "^4.6.3",
   "pinia": "^3.0.4",
-  "element-plus": "latest",
-  "axios": "latest",
-  "echarts": "latest"
+  "element-plus": "^2.12.0",
+  "axios": "^1.13.2",
+  "echarts": "^6.0.0",
+  "@element-plus/icons-vue": "^2.3.2",
+  "uuid": "^13.0.0"
+}
+```
+
+## 🛠️ 开发依赖版本
+
+```json
+{
+  "vite": "^7.2.4",
+  "typescript": "~5.9.0",
+  "vue-tsc": "^3.1.5",
+  "eslint": "^9.39.1",
+  "prettier": "3.6.2"
 }
 ```
 
@@ -181,5 +205,8 @@ VITE_API_BASE_URL=http://localhost:8080
 ## 🤝 贡献
 
 本项目为课程设计/毕业设计参考项目，欢迎提出改进建议。
+
+**项目作者**: [IIICJXXIII](https://github.com/IIICJXXIII)  
+**项目地址**: https://github.com/IIICJXXIII/smart_doc_frontend
 
 **License**: MIT
